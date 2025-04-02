@@ -17,11 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Validate Schema"
-        run: exit 0
+        run: exit 1
 
   notify-slack:
     runs-on: ubuntu-latest
-    needs: [sonar-scan, validate-schema]  # Waits for the other jobs to finish
+    needs: [sonar-scan, validate-schema]  # Waits for all the jobs to finish
     if: always()  # Always runs to check for failures
     steps:
       - name: Identify failed jobs
@@ -34,7 +34,7 @@ jobs:
           fi
 
           if [ "${{ needs.validate-schema.result }}" == "failure" ]; then
-            FAILED_JOBS="${FAILED_JOBS} Validate Schema"
+            FAILED_JOBS="${FAILED_JOBS}, Validate Schema"
           fi
 
           echo "FAILED_JOBS=${FAILED_JOBS}" >> $GITHUB_ENV

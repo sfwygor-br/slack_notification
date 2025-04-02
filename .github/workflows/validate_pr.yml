@@ -17,19 +17,13 @@ jobs:
         if: failure()
         uses: slackapi/slack-github-action@v2.0.0
         with:
-          payload: |
-            {
-              "text": "⚠️ *Falha na validação da PR*",
-              "attachments": [
-                {
-                  "color": "danger",
-                  "fields": [
-                    { "title": "Autor", "value": "${{ github.event.pull_request.user.login }}", "short": true },
-                    { "title": "Título da PR", "value": "${{ github.event.pull_request.title }}", "short": true },
-                    { "title": "Link da PR", "value": "<${{ github.event.pull_request.html_url }}|Abrir PR>", "short": false }
-                  ]
-                }
-              ]
-            }
+          payload-delimiter: "_"
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_MESSAGE: >
+            text:   "⚠️ *Falha na validação da PR*"
+            color:  "danger"
+            autor:  "${{ github.event.pull_request.user.login }}"
+            titulo: "${{ github.event.pull_request.title }}"
+            link:   "${{ github.event.pull_request.html_url }}"

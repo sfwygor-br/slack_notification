@@ -2,7 +2,9 @@ name: PR Validation
 
 on:
   pull_request:
-    types: [opened]
+    types:
+      - opened
+      - synchronize
 
 jobs:
   validate:
@@ -17,7 +19,7 @@ jobs:
         with:
           payload-delimiter: "_"
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: webhook-trigger
+          webhook-type: incoming-webhook
         env:
           SLACK_MESSAGE: >
             {

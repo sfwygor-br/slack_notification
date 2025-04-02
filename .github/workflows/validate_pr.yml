@@ -7,16 +7,16 @@ on:
       - synchronize
 
 jobs:
-  validate1:
+  sonar-scan:
     runs-on: ubuntu-latest
     steps:
-      - name: Check code (forcing error)
+      - name: "Sonar"
         run: exit 1  # Forces failure
 
-  validate2:
+  validate-schema:
     runs-on: ubuntu-latest
     steps:
-      - name: Another validation job (forcing error)
+      - name: "Validate Schema"
         run: exit 0
 
   notify-slack:

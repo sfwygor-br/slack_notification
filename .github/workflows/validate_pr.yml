@@ -11,29 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checar código (forçando erro)
-        run: exit 1  # Simulando erro
+        run: exit 1  # Isso força a falha
 
       - name: Notificar Slack em caso de erro
         if: failure()
-        run: |
-          SLACK_PAYLOAD=$(jq -n \
-            --arg text "⚠️ *Falha na validação da PR*" \
-            --arg color "danger" \
-            --arg autor "${{ github.event.pull_request.user.login }}" \
-            --arg titulo "${{ github.event.pull_request.title }}" \
-            --arg link "<${{ github.event.pull_request.html_url }}|Ver PR>" \
-            '{
-              text: $text,
-              attachments: [
-                {
-                  color: $color,
-                  fields: [
-                    { title: "Autor", value: $autor, short: true },
-                    { title: "Título", value: $titulo, short: false },
-                    { title: "Link", value: $link, short: false }
-                  ]
-                }
-              ]
-            }')
-
-          curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.SLACK_WEBHOOK_URL }}
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          payload: |
+            {
+              "text": "⚠️ *Falha na validação da PR*",
+              "Autor":  "${{ github.event.pull_request.user.login }}",
+              "Titulo": "${{ github.event.pull_request.title }}",
+              "Link":   "${{ github.event.pull_request.html_url }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

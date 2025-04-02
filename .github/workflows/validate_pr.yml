@@ -7,14 +7,24 @@ on:
       - synchronize
 
 jobs:
-  validate:
+  validate1:
     runs-on: ubuntu-latest
     steps:
       - name: Checar código (forçando erro)
-        run: exit 1  # Isso força a falha
+        run: exit 1  # Força falha
 
+  validate2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Outro job de validação (forçando erro)
+        run: exit 1  # Força falha
+
+  notify-slack:
+    runs-on: ubuntu-latest
+    needs: [validate1, validate2]  # Espera os outros jobs terminarem
+    if: failure()  # Só executa se houver falha
+    steps:
       - name: Notificar Slack em caso de erro
-        if: failure()
         uses: slackapi/slack-github-action@v2.0.0
         with:
           payload-delimiter: "_"
@@ -22,10 +32,11 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": "⚠️ *Falha na validação da PR*",
-              "Autor":  "${{ github.event.pull_request.user.login }}",
-              "Titulo": "${{ github.event.pull_request.title }}",
-              "Link":   "${{ github.event.pull_request.html_url }}"
+              "message": "Falha na validação da PR",
+              "author":  "${{ github.event.pull_request.user.login }}",
+              "pull_request_name": "${{ github.event.pull_request.title }}",
+              "pull_request_link":   "${{ github.event.pull_request.html_url }}",
+              "failed_jobs": "${{ join(needs.*.result, ', ') }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

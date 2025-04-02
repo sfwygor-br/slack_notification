@@ -24,20 +24,20 @@ jobs:
     needs: [validate1, validate2]  # Espera os outros jobs terminarem
     if: always()  # Sempre executa para verificar falhas
     steps:
-      - name: Filtrar jobs que falharam
+      - name: Identificar jobs que falharam
         id: failed-jobs
         run: |
-          FAILED_JOBS=()
-          for job in validate1 validate2; do
-            STATUS="${{ needs[job].result }}"
-            if [[ "$STATUS" == "failure" ]]; then
-              FAILED_JOBS+=("$job")
-            fi
-          done
-          echo "failed_jobs=${FAILED_JOBS[*]}" >> $GITHUB_ENV
+          FAILED_JOBS=""
+          if [ "${{ needs.validate1.result }}" == "failure" ]; then
+            FAILED_JOBS="validate1"
+          fi
+          if [ "${{ needs.validate2.result }}" == "failure" ]; then
+            FAILED_JOBS="${FAILED_JOBS} validate2"
+          fi
+          echo "FAILED_JOBS=${FAILED_JOBS}" >> $GITHUB_ENV
 
       - name: Notificar Slack em caso de erro
-        if: env.failed_jobs != ''
+        if: env.FAILED_JOBS != ''
         uses: slackapi/slack-github-action@v2.0.0
         with:
           payload-delimiter: "_"
@@ -49,7 +49,7 @@ jobs:
               "author":  "${{ github.event.pull_request.user.login }}",
               "pull_request_name": "${{ github.event.pull_request.title }}",
               "pull_request_link":   "${{ github.event.pull_request.html_url }}",
-              "failed_jobs": "${{ env.failed_jobs }}"
+              "failed_jobs": "${{ env.FAILED_JOBS }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

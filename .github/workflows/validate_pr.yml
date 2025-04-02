@@ -10,33 +10,36 @@ jobs:
   validate1:
     runs-on: ubuntu-latest
     steps:
-      - name: Checar código (forçando erro)
-        run: exit 1  # Força falha
+      - name: Check code (forcing error)
+        run: exit 1  # Forces failure
 
   validate2:
     runs-on: ubuntu-latest
     steps:
-      - name: Outro job de validação (forçando erro)
-        run: exit 1  # Força falha
+      - name: Another validation job (forcing error)
+        run: exit 0
 
   notify-slack:
     runs-on: ubuntu-latest
-    needs: [validate1, validate2]  # Espera os outros jobs terminarem
-    if: always()  # Sempre executa para verificar falhas
+    needs: [validate1, validate2]  # Waits for the other jobs to finish
+    if: always()  # Always runs to check for failures
     steps:
-      - name: Identificar jobs que falharam
+      - name: Identify failed jobs
         id: failed-jobs
         run: |
           FAILED_JOBS=""
+          
           if [ "${{ needs.validate1.result }}" == "failure" ]; then
             FAILED_JOBS="validate1"
           fi
+
           if [ "${{ needs.validate2.result }}" == "failure" ]; then
             FAILED_JOBS="${FAILED_JOBS} validate2"
           fi
+
           echo "FAILED_JOBS=${FAILED_JOBS}" >> $GITHUB_ENV
 
-      - name: Notificar Slack em caso de erro
+      - name: Notify Slack in case of error
         if: env.FAILED_JOBS != ''
         uses: slackapi/slack-github-action@v2.0.0
         with:
@@ -45,7 +48,7 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "message": "Falha na validação da PR",
+              "message": "Pull Request validation failed",
               "author":  "${{ github.event.pull_request.user.login }}",
               "pull_request_name": "${{ github.event.pull_request.title }}",
               "pull_request_link":   "${{ github.event.pull_request.html_url }}",

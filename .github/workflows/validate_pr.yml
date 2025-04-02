@@ -2,9 +2,7 @@ name: PR Validation
 
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
+    types: [opened]
 
 jobs:
   validate:
@@ -13,15 +11,15 @@ jobs:
       - name: Checar código (forçando erro)
         run: exit 1  # Isso força a falha
 
-  notify-slack:
-    needs: validate  # Só roda se o job "validate" falhar
-    if: failure()  # Garante que só roda em caso de falha
-    runs-on: ubuntu-latest
-    steps:
-      - name: Notificar Slack
+      - name: Notificar Slack em caso de erro
+        if: failure()
         uses: slackapi/slack-github-action@v2.0.0
         with:
-          payload: |
+          payload-delimiter: "_"
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+        env:
+          SLACK_MESSAGE: >
             {
               "text": "⚠️ *Falha na validação da PR*",
               "attachments": [
@@ -30,10 +28,8 @@ jobs:
                   "fields": [
                     { "title": "Autor", "value": "${{ github.event.pull_request.user.login }}", "short": true },
                     { "title": "Título da PR", "value": "${{ github.event.pull_request.title }}", "short": true },
-                    { "title": "Link da PR", "value": "<${{ github.event.pull_request.html_url }}|Abrir PR>", "short": false }
+                    { "title": "Link da PR", "value": "${{ github.event.pull_request.html_url }}", "short": false }
                   ]
                 }
               ]
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

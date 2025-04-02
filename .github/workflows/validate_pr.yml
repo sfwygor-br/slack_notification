@@ -15,16 +15,17 @@ jobs:
 
       - name: Notificar Slack em caso de erro
         if: failure()
-        uses: slackapi/slack-github-action@v2.0.0
-        with:
-          payload-delimiter: "_"
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "text": "⚠️ *Falha na validação da PR*",
-              "color": "danger",
-              "autor": "${{ github.event.pull_request.user.login }}",
-              "titulo": "${{ github.event.pull_request.title }}",
-              "link": "${{ github.event.pull_request.html_url }}"
-            }
+        run: |
+          curl -X POST -H 'Content-type: application/json' --data '{
+            "text": "⚠️ *Falha na validação da PR*",
+            "attachments": [
+              {
+                "color": "danger",
+                "fields": [
+                  { "title": "Autor", "value": "${{ github.event.pull_request.user.login }}", "short": true },
+                  { "title": "Título", "value": "${{ github.event.pull_request.title }}", "short": false },
+                  { "title": "Link", "value": "<${{ github.event.pull_request.html_url }}|Ver PR>", "short": false }
+                ]
+              }
+            ]
+          }' ${{ secrets.SLACK_WEBHOOK_URL }}

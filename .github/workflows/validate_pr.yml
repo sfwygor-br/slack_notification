@@ -13,8 +13,12 @@ jobs:
       - name: Checar código (forçando erro)
         run: exit 1  # Isso força a falha
 
-      - name: Notificar Slack em caso de erro
-        if: failure()
+  notify-slack:
+    needs: validate  # Só roda se o job "validate" falhar
+    if: failure()  # Garante que só roda em caso de falha
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notificar Slack
         uses: slackapi/slack-github-action@v2.0.0
         with:
           payload: |
